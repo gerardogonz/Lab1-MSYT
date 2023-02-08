@@ -14,3 +14,17 @@ def precios(tickers,start_date, end_date, fechas_consulta):
     output = pd.DataFrame(data = matriz_sal, index = fechas_consulta)
     output["MXN"] = mxn_consulta   
     return output
+
+
+def ticker_reformat(tickers):
+    new_tickers = []
+    for ticker in tickers:
+        if ticker == "MXN":
+            pass
+        elif ticker == "LIVEPOLC.1":
+            new_tickers.append(ticker.replace(".","-") +".MX")
+        elif ticker == "LASITEB.1":
+            new_tickers.append(ticker.replace(".","-") +".MX")
+        else:
+            new_tickers.append(ticker.replace("*","") +".MX")
+    return new_tickers
