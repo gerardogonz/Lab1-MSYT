@@ -1,4 +1,12 @@
-
+"""
+# -- --------------------------------------------------------------------------------------------------- -- #
+# -- project: A SHORT DESCRIPTION OF THE PROJECT                                                         -- #
+# -- script: visualizations.py : python script with data visualization functions                         -- #
+# -- author: YOUR GITHUB USER NAME                                                                       -- #
+# -- license: GPL-3.0 License                                                                            -- #
+# -- repository: YOUR REPOSITORY URL                                                                     -- #
+# -- --------------------------------------------------------------------------------------------------- -- #
+"""
 import pandas as pd
 import numpy as np
 import yfinance as yf
@@ -167,12 +175,28 @@ def rebalanceo(precios, pesos, capital_inicial , comision):
     pos_inic = np.multiply(pesos,capital_inicial)
     # 4. Calcular evolución del portafolio
     pesos_inic = np.repeat(pos_inic.reshape(1,len(pesos)),len(rend)+1,axis=0)
+    precio_0 = precios.iloc[0,:]
+    print(precio_0)
+    titulos_0 = (precio_0/pesos)/100
+    print(titulos_0)
+    titulos_0 = titulos_0.sum()
+    print(titulos_0)
+    titulos_compra = []
+    titulos_compra.append(np.floor(titulos_0))
     for i in range(len(rend)):
         for j in range(len(pesos)):
             if rend.iloc[i,j] >= 0.05:
                 pesos_inic[i+1,j] = pesos_inic[i,j] * 1.025
+                temp = pesos_inic[i+1,j] / precio_0[j]
+                temp = temp.sum()
+                titulos_compra.append(np.floor(temp))
+                titulos_0 = temp
             elif rend.iloc[i,j] <= -0.05:
                 pesos_inic[i+1,j] = pesos_inic[i,j] * 0.975
+                temp = pesos_inic[i+1,j] / precio_0[j]
+                temp = temp.sum()
+                titulos_compra.append(np.floor(-temp))
+                titulos_0 = temp
             else:
                 pesos_inic[i+1,j] = pesos_inic[i,j]
     portafolio = pesos_inic.sum(axis=1)
@@ -180,15 +204,40 @@ def rebalanceo(precios, pesos, capital_inicial , comision):
     # Calcular el rendimiento (cambio porcentual) del portafolio, es un numpy array
     rend_portafolio = pd.DataFrame(portafolio,columns=["rend"]).pct_change()
 
-
-
     portafolio = pd.DataFrame({
         "Portafolio": portafolio,
         "Rend": rend_portafolio["rend"],
         "Acum": rend_portafolio["rend"].cumsum()
     })
-    return portafolio
+    # Calculamos el histórico de operaciones
+    titulos_totales = np.array(titulos_compra).cumsum()
+    comisiones = np.abs(np.array(titulos_compra)) * comision    
+    comision_acum = comisiones.cumsum()
+    # Armando el registro de operaciones
+    operaciones = pd.DataFrame({
+        "Titulos totales": titulos_totales,
+        "Titulos comprados": titulos_compra,
+        "Comisión": comisiones,
+        "Comisiones acumuladas": comision_acum})
+    return portafolio.round(2), operaciones
 
+def evaluacion_des(pasiva,activa,rf):
+    matriz = np.array([
+        [pasiva["Rend"].mean()*252/12, activa["Rend"].mean()*252/12],
+        [pasiva["Rend"].std()*252**0.5, activa["Rend"].std()*252**0.5],
+        [pasiva["Acum"][pasiva.index[-1]]*252/12, activa["Rend"][activa.index[-1]]*252/12]
+    ])
+    matriz_2 = np.array([
+        [matriz[0,0], matriz[0,1]],
+        [matriz[2,0], matriz[2,1]],
+        [(matriz[0,0]-rf)/matriz[1,0], (matriz[0,1]-rf)/matriz[1,1]]
+        ])
+    df = pd.DataFrame(columns=["Descripción","Pasiva","Activa"],
+    index=["rend_m","rend_c","Sharpe"])    
+    df["Descripción"] = ["Rendimiento promedio mensual","Rendimiento mensual acumulado","Sharpe"]
+    df["Pasiva"] = matriz_2[:,0]
+    df["Activa"] = matriz_2[:,1]
+    return df.round(2)
 
     
 

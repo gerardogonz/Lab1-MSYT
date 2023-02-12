@@ -1,3 +1,12 @@
+"""
+# -- --------------------------------------------------------------------------------------------------- -- #
+# -- project: A SHORT DESCRIPTION OF THE PROJECT                                                         -- #
+# -- script: data.py :                          -- #
+# -- author:                                                                        -- #
+# -- license:                                                                            -- #
+# -- repository:                                                                      -- #
+# -- --------------------------------------------------------------------------------------------------- -- #
+"""
 
 import functions as fn
 import data as dt
@@ -27,7 +36,8 @@ precios_cash = fn.precios(
     fechas_consulta=fechas_consulta
 )
 precios_cash.drop("MXN",axis=1,inplace=True)
-pasiva_inicial = fn.pasiva_inicial(precios,precios_cash,tickers,pond,pond_cash,1e6)
+pasiva_inicial,cash = fn.pasiva_inicial(precios,precios_cash,tickers,pond,pond_cash,1e6)
+pasiva = fn.inversion_pasiva(pasiva_inicial,precios,0.1/100,cash,fechas_consulta)
 
 #### ACTIVA
 tickers_activa, pond_activa = dt.tickers_activa()
@@ -63,7 +73,8 @@ price_data = price_data.drop(columns=["SITESB-1.MX","NMKA.MX"])
 price_data = price_data.replace(0,np.nan)
 corr = price_data.corr()
 annual_ret_sum =  fn.mean_var_generator(price_data)
-w, emv = fn.port_EMV(annual_ret_sum,corr,0.05)
+rf = 0.0429/252
+w, emv = fn.port_EMV(annual_ret_sum,corr,rf)
 
 ## Corrección de los tickers
 precios_activa_estrategia = precios_activa_estrategia.drop(columns=["SITESB-1.MX","NMKA.MX"])
@@ -71,7 +82,7 @@ precios_activa_estrategia = precios_activa_estrategia.replace(0,np.nan)
 
 
 #### Ejecución de la estrategia
-
-#y, z = fn.rebalanceo(precios_activa_estrategia,w,1e6,0.1/100)
-inversion_activa = fn.rebalanceo(precios_activa_estrategia,w,1e6,0.1/100)
-
+inversion_activa,df_operaciones = fn.rebalanceo(precios_activa_estrategia,w,1e6,0.1/100)
+# Actualizar el timestamp (Luego, ya es sábado y estoy cansado :c )
+# Medidas de desempeño
+desemp = fn.evaluacion_des(pasiva,inversion_activa,rf)
