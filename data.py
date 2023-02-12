@@ -1,3 +1,4 @@
+
 import pandas as pd
 
 
@@ -50,8 +51,15 @@ def tickers():
             pass 
     return output, output_cash, pond, pond_cash
 
+def tickers_activa():
+    df = pd.read_csv('files/NAFTRAC_20210129.csv',skiprows=2)
+    tickers = pd.unique(df["Ticker"])[:-1]
+    pond = pd.DataFrame(columns=["Ticker","Pond"])
+    pond["Ticker"] = tickers
+    temp = []
+    for ticker in tickers:
+        temp.append(df["Peso (%)"][df["Ticker"] == ticker].to_numpy()[0])
+    pond["Pond"] = temp
+    pond.set_index("Ticker",inplace=True)
 
-def ponderacion():
-    df25 = pd.read_csv('files/NAFTRAC_20230125.csv',skiprows=2)
-
-
+    return tickers, pond
