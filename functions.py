@@ -1,3 +1,4 @@
+
 import pandas as pd
 import numpy as np
 import yfinance as yf
@@ -187,3 +188,9 @@ def rebalanceo(precios, pesos, capital_inicial , comision):
         "Acum": rend_portafolio["rend"].cumsum()
     })
     return portafolio
+
+
+    
+
+
+
