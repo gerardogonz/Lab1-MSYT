@@ -157,6 +157,7 @@ def port_EMV(annual_ret_summ,corr,rf):
 # Disminuir en 2.5% la posición en activos cuyo precio disminuyó un 5% o más
 # Aumentar en 2.5% la posición en activos cuyo precio aumentó un 5% o más
 # Considera el pago de comisiones de 0.1% por operación
+
 def rebalanceo(precios, pesos, capital_inicial , comision):
     # Eliminando todos los precios y pesos que sean 0
     remain = []
